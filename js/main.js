@@ -15,7 +15,7 @@ const LMS_TEXT = {
   fallbackName: 'לומדת/לומד יקר/ה'
 };
 // connected: init succeeded · canSave: connected and not in review/browse mode · ended: quit already called
-const lms = { connected: false, canSave: false, ended: false, wasPassed: false, startedAt: Date.now(), closingSent: false, habitsSent: false };
+const lms = { connected: false, canSave: false, ended: false, wasPassed: false, startedAt: Date.now(), unitSent: false };
 
 // Guarded read: never touches the API outside the LMS
 function scormGet(field) {
@@ -72,7 +72,7 @@ function endLmsSession() {
 const PASS_MARK = 60;
 const letter = (i) => 'abcdefghij'[i];
 // First attempt per game: retries keep teaching, but only the first attempt is reported
-const firstTry = { mystery: [], sorting: null };
+const firstTry = { mystery: [], sorting: null, closing: null, habits: null };
 
 // Append interactions after the existing ones (never from 0), then save once
 function sendInteractions(list) {
@@ -111,6 +111,7 @@ window.addEventListener('beforeunload', endLmsSession);
 const progress = { mystery: false, sorting: false, closing: false, habits: false };
 function reportProgress(part) {
   progress[part] = true;
+  updateSubmitState();
 }
 
 /* ===== Mystery case: first question shows at once, clues can be revealed any time ===== */
@@ -143,6 +144,7 @@ const steps = [
 const caseEnd = '<strong>מה מיכל יכולה לעשות?</strong> לחכות שהאדמה תתייבש מעט לפני ההשקיה הבאה, לרוקן את המים שהצטברו ולשתול את הפיקוס בעציץ עם חורי ניקוז, שאותו אפשר להכניס לעציץ הנוי. שימו לב שהמסקנה התבססה על כמה בדיקות יחד ולא על הסימן לבדו. אם הצמח ממשיך להיחלש, כדאי לפנות לצוות המשתלה.';
 let clueCount = 1;
 let step = 0;
+let answered = false; // one answer per question: "what you answered stands"
 
 function renderClues() {
   $('clueList').innerHTML = clues.slice(0, clueCount).map((c) => `<li class="list-group-item">${c}</li>`).join('');
@@ -158,21 +160,25 @@ function renderStep() {
   $('caseOptions').innerHTML = s.options.map((o, i) => `<button type="button" class="case-option" data-index="${i}" aria-pressed="false">${o.text}</button>`).join('');
   $('caseFeedback').innerHTML = '';
   $('caseNext').hidden = true;
+  answered = false;
 }
 
 $('caseOptions').addEventListener('click', (e) => {
   const btn = e.target.closest('.case-option');
-  if (!btn) return;
-  const option = steps[step].options[btn.dataset.index];
-  firstTry.mystery[step] ??= { response: letter(+btn.dataset.index), ok: option.good }; // report the first choice only
-  $('caseOptions').querySelectorAll('.case-option').forEach((b) => { b.className = 'case-option'; b.setAttribute('aria-pressed', 'false'); });
+  if (!btn || answered) return;
+  answered = true;
+  const options = steps[step].options;
+  const option = options[btn.dataset.index];
+  firstTry.mystery[step] ??= { response: letter(+btn.dataset.index), ok: option.good }; // report the first round only
   btn.classList.add(option.good ? 'is-good' : 'is-weak');
   btn.setAttribute('aria-pressed', 'true');
+  $('caseOptions').querySelectorAll('.case-option').forEach((b) => { b.disabled = true; });
+  const fitting = option.good ? '' : `<p class="mt-2 mb-0"><strong>התשובה המתאימה:</strong> ${options.find((o) => o.good).text}</p>`;
   const last = step === steps.length - 1;
-  showFeedback($('caseFeedback'), option.good ? 'success' : 'danger', option.why + (option.good && last ? `<hr>${caseEnd}` : ''));
-  $('caseNext').hidden = !option.good || last;
-  $('caseRestart').hidden = !(option.good && last);
-  if (option.good && last) reportProgress('mystery');
+  showFeedback($('caseFeedback'), option.good ? 'success' : 'danger', option.why + fitting + (last ? `<hr>${caseEnd}` : ''));
+  $('caseNext').hidden = last;
+  $('caseRestart').hidden = !last;
+  if (last) reportProgress('mystery');
 });
 
 $('nextClue').addEventListener('click', () => { clueCount++; renderClues(); });
@@ -280,6 +286,7 @@ $('checkSort').addEventListener('click', () => {
   });
   // Report the first full check only: card number (page order) . category letter (a sun, b over, c under)
   firstTry.sorting ??= { response: cards.map((c, i) => `${i + 1}.${letter(zoneKeys.indexOf(choiceOf(c)))}`).join(','), correct };
+  updateSubmitState();
   if (correct === cards.length) {
     showFeedback($('sortFeedback'), 'success', '<strong>מעולה! מיינתם נכון את כל ששת המקרים.</strong> שמתם לב לפרטים של כל מקרה, ולא רק לסימן עצמו.');
     reportProgress('sorting');
@@ -413,55 +420,74 @@ form.addEventListener('submit', (e) => {
     (tips.improve.length ? `<p class="fw-bold mb-1 mt-3">מה כדאי לשפר</p>${list(tips.improve)}` : '<p class="mt-3 mb-0">ההרגלים שלכם כבר מצוינים. המשיכו כך!</p>') +
     '<p class="small mt-3 mb-0">הטיפים כלליים ולא מאבחנים צמח מסוים. אם הצמח נראה חולה, פנו לצוות המשתלה.</p>');
   reportProgress('habits');
-  if (!lms.habitsSent) { // only the first valid submission goes to the report
-    lms.habitsSent = true;
-    sendInteractions([
+  firstTry.habits ??= [ // only the first valid submission goes to the report (sent with the unit)
       { id: 'Q06_plant_name', type: 'fill-in', response: name, result: 'neutral' },
       { id: 'Q07_plant_count', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
       ...['when', 'check', 'light', 'pot'].map((q, i) => ({
         id: ['Q08_watering_timing', 'Q09_soil_check_habit', 'Q10_light_location', 'Q11_pot_drainage'][i],
         type: 'choice', response: toLetters(q), result: 'neutral'
       }))
-    ]);
-  }
+  ];
+  updateSubmitState();
 });
 
 closingForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (lms.closingSent) return; // double click / resubmit: report once
-  // Games must be played first, checked before any feedback reveals answers
-  const missing = [!firstTry.mystery[1] && '"תיק הצמח המסתורי"', !firstTry.sorting && '"עזרו לחבר!"'].filter(Boolean);
-  if (missing.length) {
-    showFeedback($('closingFeedback'), 'warning', `כדי להגיש, השלימו קודם את ${missing.join(' ואת ')}.`);
-    return;
-  }
+  if (firstTry.closing) return; // one check: answers lock after it
   if (!validateClosing()) {
     showFeedback($('closingFeedback'), 'danger', 'חסרות תשובות. תקנו את השדות המסומנים ושלחו שוב.');
     focusFirstInvalid(closingForm);
     return;
   }
-  lms.closingSent = true;
   closingForm.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
   const result = gradeQuiz();
-  const [m1, m2] = firstTry.mystery;
-  const sort = firstTry.sorting;
   const causeOk = picked('cause')[0] === quiz.cause;
-  const checksScore = result.score - causeOk; // gradeQuiz total = cause (0/1) + checks (0/0.5/1)
+  firstTry.closing = { score: result.score, causeOk, checksScore: result.score - causeOk, // total = cause (0/1) + checks (0/0.5/1)
+    cause: toLetters('cause'), checks: toLetters('checks') };
+  showFeedback($('closingFeedback'), 'light border',
+    `<h3 class="card-title-text h5">התוצאה שלכם: ${result.score} מתוך 2</h3>${result.html}`);
+  progress.quizScore = result.score;
+  reportProgress('closing');
+});
+
+/* ===== Unit submit: enabled after one attempt in every part; sends everything once ===== */
+const PARTS = [
+  ['mystery', '"תיק הצמח המסתורי"', () => firstTry.mystery.length === steps.length],
+  ['sorting', '"עזרו לחבר!"', () => Boolean(firstTry.sorting)],
+  ['closing', '"מקרה לסיום"', () => Boolean(firstTry.closing)],
+  ['habits', '"איך אתם מטפלים בצמחים שלכם?"', () => Boolean(firstTry.habits)]
+];
+
+function updateSubmitState() {
+  if (lms.unitSent) return;
+  const missing = PARTS.filter(([, , done]) => !done()).map(([, label]) => label);
+  $('submitUnit').disabled = missing.length > 0;
+  $('submitHint').textContent = missing.length
+    ? `הכפתור ייפתח אחרי שתנסו כל חלק ביחידה. נשאר: ${missing.join(', ')}.`
+    : 'ניסיתם את כל החלקים. אפשר להגיש.';
+}
+
+$('submitUnit').addEventListener('click', () => {
+  if (lms.unitSent || $('submitUnit').disabled) return; // double click: report once
+  lms.unitSent = true;
+  $('submitUnit').disabled = true;
+  const [m1, m2] = firstTry.mystery;
+  const { sorting: sort, closing } = firstTry;
   // Three graded parts, a third each (SCORM_SPEC.md part 5)
-  const score = Math.round(((m1.ok + m2.ok) / 2 + sort.correct / 6 + result.score / 2) / 3 * 100);
+  const score = Math.round(((m1.ok + m2.ok) / 2 + sort.correct / 6 + closing.score / 2) / 3 * 100);
   const sent = sendInteractions([
     { id: 'Q01_mystery_check', type: 'choice', response: m1.response, pattern: 'a', result: resultOf(+m1.ok) },
     { id: 'Q02_mystery_cause', type: 'choice', response: m2.response, pattern: 'a', result: resultOf(+m2.ok) },
     { id: 'Q03_sorting_cases', type: 'matching', response: sort.response, pattern: '1.a,2.b,3.c,4.b,5.a,6.c', result: resultOf(sort.correct / 6) },
-    { id: 'Q04_closing_cause', type: 'choice', response: toLetters('cause'), pattern: 'b', result: resultOf(+causeOk) },
-    { id: 'Q05_closing_checks', type: 'choice', response: toLetters('checks'), pattern: 'a,c', result: resultOf(checksScore) }
+    { id: 'Q04_closing_cause', type: 'choice', response: closing.cause, pattern: 'b', result: resultOf(+closing.causeOk) },
+    { id: 'Q05_closing_checks', type: 'choice', response: closing.checks, pattern: 'a,c', result: resultOf(closing.checksScore) },
+    ...firstTry.habits
   ]);
   const saved = sendScore(score) && sent;
   const note = !lms.canSave ? 'הציון לא נשמר, כי היחידה פועלת מחוץ למערכת הקורס או במצב צפייה.'
-    : saved ? 'ההגשה נשמרה במערכת הקורס.' : 'ההגשה לא נשמרה במערכת הקורס. צלמו את המסך ופנו למנחה.';
-  showFeedback($('closingFeedback'), 'light border',
-    `<h3 class="card-title-text h5">התוצאה שלכם: ${result.score} מתוך 2</h3>${result.html}<hr>` +
+    : saved ? 'הלומדה הוגשה ונשמרה במערכת הקורס. אפשר לסגור את החלון.' : 'ההגשה לא נשמרה במערכת הקורס. צלמו את המסך ופנו למנחה.';
+  $('submitHint').textContent = '';
+  showFeedback($('submitFeedback'), saved || !lms.canSave ? 'light border' : 'danger',
     `<p class="fw-bold mb-1">הציון שלכם ביחידה: ${score} (ציון מעבר: ${PASS_MARK})</p><p class="mb-0">${note}</p>`);
-  progress.quizScore = result.score;
-  reportProgress('closing');
 });
+updateSubmitState();

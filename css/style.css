@@ -85,6 +85,8 @@ body { padding-top: 70px; }
 .case-option:hover { border-color: var(--c-leaf); }
 .case-option.is-good { border-color: var(--c-dark); background: var(--bs-success-bg-subtle); }
 .case-option.is-weak { border-color: var(--c-red-dark); background: var(--c-blush); }
+.case-option:disabled { cursor: default; }
+.case-option:disabled:not(.is-good, .is-weak) { color: var(--bs-secondary-color); }
 
 /* ===== Flip cards: both faces share one grid cell, so the card fits the taller face ===== */
 .flip-card { perspective: 1200px; height: 100%; cursor: pointer; }
