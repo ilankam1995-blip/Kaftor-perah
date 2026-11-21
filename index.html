@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>מה העלה מספר לנו? | משתלת כפתור ופרח</title>
+  <meta name="description" content="יחידת למידה קצרה של משתלת כפתור ופרח: מתבוננים בעלי צמחי הבית, חוקרים מה עשוי לגרום לשינוי ובודקים את הרגלי הטיפול שלנו.">
+  <meta name="author" content="קבוצה 15 – משתלת כפתור ופרח">
+  <meta name="keywords" content="צמחי בית, צריבת שמש, השקיית יתר, מחסור במים, ניקוז, משתלה, יחידת למידה">
+  <meta property="og:title" content="מה העלה מספר לנו? | משתלת כפתור ופרח">
+  <meta property="og:description" content="מכירים את הסימנים, מבינים את הסיבות ולומדים להקשיב למה שהצמח שלנו צריך.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&amp;family=Rubik:wght@500;700&amp;display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+  <link rel="stylesheet" href="css/style.css?v=2.4.0">
+</head>
+<body>
+  <a href="#main" class="skip-link visually-hidden-focusable position-absolute top-0 end-0 m-2 p-2 bg-white rounded">דילוג לתוכן הראשי</a>
+
+  <!-- Header: logo + main navigation + page intro (hero) -->
+  <header>
+    <nav class="navbar navbar-expand-lg site-header fixed-top shadow-sm" aria-label="ניווט ראשי">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2 order-lg-last me-0" href="#top">
+          <svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="21" fill="#1E4636"/><path d="M22 33 V20" stroke="#FBF3EA" stroke-width="2.5" stroke-linecap="round"/><path d="M22 22 C14 22 11 16 12 11 C18 11 22 15 22 22 Z" fill="#C9934E"/><path d="M22 20 C29 20 33 14 32 9 C25 9 22 14 22 20 Z" fill="#FBF3EA"/></svg>
+          <span>כפתור ופרח</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="פתיחת תפריט">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav gap-lg-3">
+            <li class="nav-item"><a class="nav-link" href="#top">ראשי</a></li>
+            <li class="nav-item"><a class="nav-link" href="#signs">מכירים את הסימנים</a></li>
+            <li class="nav-item"><a class="nav-link" href="#mystery">תיק הצמח המסתורי</a></li>
+            <li class="nav-item"><a class="nav-link" href="#types">גורמים לפגיעה בצמח</a></li>
+            <li class="nav-item"><a class="nav-link" href="#practice">בואו נתרגל</a></li>
+            <li class="nav-item"><a class="nav-link" href="#closing-case">מקרה לסיום</a></li>
+            <li class="nav-item"><a class="nav-link" href="#habits">השאלון האישי</a></li>
+            <li class="nav-item"><a class="nav-link" href="#summary">סיכום</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- LMS notice: shown by JS outside the LMS or in review mode -->
+    <div id="lmsNotice" class="container alert alert-warning my-3" role="status" hidden></div>
+
+    <!-- Hero -->
+    <section id="top" class="panel photo-panel hero d-flex align-items-center" aria-labelledby="heroTitle">
+      <div class="row w-100 mx-0">
+        <div class="col-lg-6 d-flex flex-column gap-3 px-0">
+          <!-- Learner name comes from the LMS (cmi.core.student_name); fallback text stays outside the LMS -->
+          <p class="hero-sub fs-5 fw-bold m-0">שלום <span id="learner-name">לומדת/לומד יקר/ה</span>!</p>
+          <h1 id="heroTitle" class="hero-title m-0">מה העלה מספר לנו?</h1>
+          <p class="hero-sub fs-4 fw-medium m-0">מכירים את הסימנים, מבינים את הסיבות ולומדים להקשיב למה שהצמח שלנו צריך.</p>
+          <p class="lead-text m-0">הצהבה, כתמים או עלים נבולים? לפעמים שינוי קטן במראה הצמח הוא סימן לכך שמשהו בתנאי הגידול שלו אינו מתאים.</p>
+          <p class="lead-text m-0">ביחידה נלמד להתבונן בצמח, לחקור מה עשוי לגרום לשינוי ולבדוק את הרגלי הטיפול שלנו.</p>
+          <p class="badge rounded-pill chip align-self-start m-0">זמן למידה: כ-10 דקות</p>
+          <div><a href="#signs" class="btn btn-brand btn-lg rounded-pill px-4">בואו נתחיל</a></div>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main id="main">
+
+    <!-- Section 1: observing the signs -->
+    <section id="signs" class="panel" aria-labelledby="signsTitle">
+      <h2 id="signsTitle" class="section-title">מכירים את הסימנים</h2>
+      <p class="lead-text mb-4">לפני שמחפשים סיבה, מתבוננים: מה השתנה, איפה בדיוק ומתי זה התחיל. אלה שלושת השינויים הנפוצים שכדאי לזהות בעלים.</p>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <article class="card h-100">
+            <img src="images/sunburn-leaf.jpg" class="card-img-top photo" alt="עלה ירוק ועליו כמה כתמים חומים ויבשים" width="960" height="524" loading="lazy">
+            <div class="card-body">
+              <h3 class="card-title-text h4">כתמים</h3>
+              <p class="card-text">אזורים על העלה בצבע שונה מהשאר: בהירים, חומים או דהויים.</p>
+              <p class="card-text small text-body-secondary"><strong>שימו לב:</strong> באילו עלים הם מופיעים, ובאיזה צד של הצמח?</p>
+            </div>
+          </article>
+        </div>
+        <div class="col-md-4">
+          <article class="card h-100">
+            <img src="images/overwatering-leaf.jpg" class="card-img-top photo" alt="עלה שהצהיב ברובו ונשארו בו אזורים ירוקים" width="960" height="524" loading="lazy">
+            <div class="card-body">
+              <h3 class="card-title-text h4">הצהבה</h3>
+              <p class="card-text">העלה מאבד את הצבע הירוק שלו, כולו או בחלקים.</p>
+              <p class="card-text small text-body-secondary"><strong>שימו לב:</strong> האם מצהיבים העלים הישנים בתחתית או דווקא העלים החדשים?</p>
+            </div>
+          </article>
+        </div>
+        <div class="col-md-4">
+          <article class="card h-100">
+            <img src="images/underwatering-plant.jpg" class="card-img-top photo" alt="צמח קטן שעליו רפויים ושמוטים" width="960" height="524" loading="lazy">
+            <div class="card-body">
+              <h3 class="card-title-text h4">נבילה</h3>
+              <p class="card-text">העלים והגבעולים רפויים ושמוטים במקום לעמוד זקופים.</p>
+              <p class="card-text small text-body-secondary"><strong>שימו לב:</strong> האם כל הצמח נבול, או רק חלק ממנו?</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: mystery plant case (one investigation, step by step) -->
+    <section id="mystery" class="panel" aria-labelledby="mysteryTitle">
+      <h2 id="mysteryTitle" class="section-title">תיק הצמח המסתורי</h2>
+      <p class="lead-text">ניגשתם להשקות את הצמח החדש שקניתם, ופתאום שמתם לב שמשהו השתנה בעלים.</p>
+      <p class="lead-text fw-bold text-brand mb-4">חשפו את הרמזים, בחרו מה כדאי לבדוק ועזרו לחקור מה קורה לצמח.</p>
+
+      <div class="card">
+        <div class="card-body p-4 p-lg-5 row g-4 mx-0">
+          <div class="col-lg-5 d-flex flex-column gap-3">
+            <img class="photo" src="images/overwatering-leaf.jpg" alt="עלה של פיקוס שהצהיב ברובו" width="960" height="524">
+            <h3 class="card-title-text h4 m-0">הפיקוס של מיכל</h3>
+            <p class="m-0">מיכל שמה לב שעלים של הפיקוס שלה מתחילים להצהיב. היא לא בטוחה מה הסיבה, וביקשה מכם לעזור לה לחקור.</p>
+            <h4 class="h6 fw-bold text-brand m-0">רמזים מהשטח</h4>
+            <ol id="clueList" class="list-group list-group-numbered" aria-live="polite"></ol>
+            <button type="button" id="nextClue" class="btn btn-ghost rounded-pill align-self-start">גלו רמז נוסף</button>
+          </div>
+          <div class="col-lg-7 d-flex flex-column gap-3" id="caseStage">
+            <p id="caseFinding" class="alert alert-light border m-0" hidden></p>
+            <fieldset id="caseQuestion" hidden>
+              <legend id="caseLegend" class="question fs-5 fw-bold"></legend>
+              <div id="caseOptions" class="d-grid gap-2"></div>
+            </fieldset>
+            <div id="caseFeedback" aria-live="polite"></div>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" id="caseNext" class="btn btn-brand rounded-pill px-4" hidden>לשלב הבא</button>
+              <button type="button" id="caseRestart" class="btn btn-ghost rounded-pill" hidden>לחקור שוב</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: deeper knowledge on the three causes -->
+    <section id="types" class="panel" aria-labelledby="typesTitle">
+      <h2 id="typesTitle" class="section-title">גורמים לפגיעה בצמח</h2>
+      <p class="lead-text">אור, מים ואוויר לשורשים. כשאחד מהם לא מאוזן, הצמח מראה זאת בעלים. כל כרטיס מסביר למה זה קורה, מה מגביר את הסיכון ואיך בודקים.</p>
+      <p class="lead-text fw-bold text-brand mb-4">לחצו על כל כרטיס כדי להפוך אותו.</p>
+      <div class="row g-4">
+        <div class="col-lg-4"><article class="flip-card">
+          <div class="flip-inner">
+            <div class="flip-face card">
+              <img src="images/sunburn-leaf.jpg" class="card-img-top photo" alt="עלה עם כתמים חומים ויבשים" width="960" height="524" loading="lazy">
+              <div class="card-body d-flex flex-column">
+                <h3 class="card-title-text h4">צריבת שמש</h3>
+                <p class="card-text">כשהאור חזק מכפי שהעלים רגילים אליו.</p>
+                <!-- Hidden until keyboard focus, so keyboard users can still flip the card -->
+                <button type="button" class="btn btn-ghost flip-btn visually-hidden-focusable align-self-start" aria-expanded="false">הפכו את הכרטיס</button>
+              </div>
+            </div>
+            <div class="flip-face flip-back card" inert>
+              <div class="card-body d-flex flex-column gap-2">
+                <p class="card-title-text h5">צריבת שמש</p>
+                <p class="m-0"><strong>למה זה קורה?</strong> כשצמח עובר בבת אחת ממקום מוצל לשמש חזקה, האור העז מפרק את הכלורופיל ומחמם את רקמת העלה. לפעמים מספיקה שעה אחת.</p>
+                <p class="m-0"><strong>מה מגביר את הסיכון?</strong> העברה פתאומית למקום מואר, למשל הוצאה למרפסת, וחשיפה לשמש של שעות הצהריים.</p>
+                <p class="m-0"><strong>איך בודקים?</strong> האם השינוי הופיע זמן קצר אחרי שהצמח הועבר, ובעיקר בעלים שפונים לשמש?</p>
+                <p class="m-0"><strong>איך מונעים?</strong> מעבירים בהדרגה: מתחילים באור בהיר בלי שמש ישירה, ומגדילים את החשיפה לאט. עלה שנצרב לא יחזור לקדמותו, אבל הצמח יכול להתאושש בצמיחה חדשה.</p>
+                <button type="button" class="btn btn-ghost flip-btn mt-auto align-self-start" aria-expanded="true">חזרה לתמונה</button>
+              </div>
+            </div>
+          </div>
+        </article></div>
+        <div class="col-lg-4"><article class="flip-card">
+          <div class="flip-inner">
+            <div class="flip-face card">
+              <img src="images/overwatering-leaf.jpg" class="card-img-top photo" alt="עלה שהצהיב ברובו" width="960" height="524" loading="lazy">
+              <div class="card-body d-flex flex-column">
+                <h3 class="card-title-text h4">השקיית יתר</h3>
+                <p class="card-text">כשהשורשים נשארים במצע רווי מים.</p>
+                <button type="button" class="btn btn-ghost flip-btn visually-hidden-focusable align-self-start" aria-expanded="false">הפכו את הכרטיס</button>
+              </div>
+            </div>
+            <div class="flip-face flip-back card" inert>
+              <div class="card-body d-flex flex-column gap-2">
+                <p class="card-title-text h5">השקיית יתר</p>
+                <p class="m-0"><strong>למה זה קורה?</strong> השורשים צריכים חמצן. כשהמצע רטוב כל הזמן, אין להם אוויר, והם עלולים להירקב.</p>
+                <p class="m-0"><strong>מה מגביר את הסיכון?</strong> עציץ בלי חורי ניקוז, מים שעומדים בצלחת, עציץ גדול מדי ביחס לצמח ומצע כבד שמחזיק הרבה מים.</p>
+                <p class="m-0"><strong>סימנים נוספים:</strong> נשירת עלים, זבובונים קטנים סביב האדמה, ואפילו נבילה, כי שורשים פגועים לא מצליחים להוביל מים.</p>
+                <p class="m-0"><strong>איך מונעים?</strong> משקים עד שהמים יוצאים מהתחתית, ומרוקנים את הצלחת בתוך כשעה.</p>
+                <button type="button" class="btn btn-ghost flip-btn mt-auto align-self-start" aria-expanded="true">חזרה לתמונה</button>
+              </div>
+            </div>
+          </div>
+        </article></div>
+        <div class="col-lg-4"><article class="flip-card">
+          <div class="flip-inner">
+            <div class="flip-face card">
+              <img src="images/underwatering-plant.jpg" class="card-img-top photo" alt="צמח עם עלים נבולים ומצע יבש" width="960" height="524" loading="lazy">
+              <div class="card-body d-flex flex-column">
+                <h3 class="card-title-text h4">מחסור במים</h3>
+                <p class="card-text">כשהמצע מתייבש יותר מדי בין ההשקיות.</p>
+                <button type="button" class="btn btn-ghost flip-btn visually-hidden-focusable align-self-start" aria-expanded="false">הפכו את הכרטיס</button>
+              </div>
+            </div>
+            <div class="flip-face flip-back card" inert>
+              <div class="card-body d-flex flex-column gap-2">
+                <p class="card-title-text h5">מחסור במים</p>
+                <p class="m-0"><strong>למה זה קורה?</strong> כשהמצע מתייבש מאוד, חלק מהשורשים נפגעים, ובכל פעם שזה חוזר הנזק גדל.</p>
+                <p class="m-0"><strong>מה מגביר את הסיכון?</strong> עציץ קטן ביחס לצמח, עציץ חרס לא מזוגג שמתייבש מהר, ומקום חם ליד מקור חום.</p>
+                <p class="m-0"><strong>סימן נוסף:</strong> האדמה מתכווצת ומתרחקת מדפנות העציץ, והמים זורמים בצדדים ישר לצלחת בלי להרטיב את השורשים.</p>
+                <p class="m-0"><strong>מה עושים?</strong> אם המצע יבש מאוד, טובלים את העציץ במים עד שהבועות מפסיקות לעלות, ואז מנקזים היטב.</p>
+                <button type="button" class="btn btn-ghost flip-btn mt-auto align-self-start" aria-expanded="true">חזרה לתמונה</button>
+              </div>
+            </div>
+          </div>
+        </article></div>
+      </div>
+
+      <div class="card mt-5">
+        <div class="card-body p-4 row g-4 align-items-center mx-0">
+          <div class="col-lg-5">
+            <h3 class="card-title-text h4">איך שומרים על צמח בריא?</h3>
+            <p>בסרטון נכיר כמה טיפים פשוטים לטיפול נכון בצמחי הבית: איך להתאים לצמח את התאורה, מתי להשקות ואיך לבדוק את מצב המצע.</p>
+            <div class="d-flex gap-2 flex-wrap"><span class="badge rounded-pill chip">תאורה מתאימה</span><span class="badge rounded-pill chip">השקיה במידה</span><span class="badge rounded-pill chip">בדיקת המצע</span></div>
+          </div>
+          <div class="col-lg-7">
+            <!-- Video made with NotebookLM. Hebrew captions are burned into the video (open captions, WCAG 1.2.2) -->
+            <video class="care-video w-100 rounded-4 bg-dark" controls preload="metadata" poster="images/healthy-plant-hero.jpg" aria-label="סרטון: איך שומרים על צמח בריא">
+              <source src="videos/plant-care-tips.mp4" type="video/mp4">
+              הדפדפן שלכם לא תומך בהצגת וידאו.
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="card-title-text h3 mt-5">אותו סימן, כמה סיבות אפשריות</h3>
+      <p class="lead-text">סימן אחד לבדו לא מספיק כדי לדעת מה קרה, ולעיתים כמה גורמים פועלים יחד. הבדיקות בטבלה עוזרות להבחין ביניהם.</p>
+      <div class="table-responsive d-none d-md-block">
+        <table id="compareTable" class="table compare-table align-top mb-0">
+          <caption class="visually-hidden">סימנים, הגורמים האפשריים להם והבדיקה שעוזרת להבחין</caption>
+          <thead><tr><th scope="col">מה רואים?</th><th scope="col">גורמים אפשריים</th><th scope="col">הבדיקה שעוזרת להבחין</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">עלים נבולים</th><td>מחסור במים, וגם השקיית יתר שפגעה בשורשים</td><td>מצע יבש ועציץ קל מצביעים על מחסור. אם המצע רטוב, לא משקים שוב, ובודקים ניקוז.</td></tr>
+            <tr><th scope="row">עלים מצהיבים</th><td>השקיית יתר, מחסור במים, ולפעמים עודף דשן</td><td>בודקים את המצע בעומק של פרק אצבע ונזכרים מתי הצמח קיבל דשן לאחרונה.</td></tr>
+            <tr><th scope="row">כתמים בהירים או דהויים</th><td>צריבת שמש, או הסתגלות של הצמח למקום מואר חדש</td><td>האם הצמח הועבר לאחרונה? האם השינוי מופיע בעיקר בעלים שחשופים לשמש?</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Phone view: accordion built from the table rows in main.js -->
+      <div id="compareAccordion" class="accordion d-md-none"></div>
+    </section>
+
+    <!-- Section 4: sorting game (drag on desktop, select on smaller screens) -->
+    <section id="practice" class="panel" aria-labelledby="practiceTitle">
+      <h2 id="practiceTitle" class="section-title">עזרו לחבר!</h2>
+      <p class="lead-text">לפניכם שישה מקרים חדשים. קראו את הפרטים, וחשבו איזה גורם הוא הסביר ביותר.</p>
+      <p class="lead-text d-none d-lg-block">גררו כל כרטיסייה לקטגוריה המתאימה.</p>
+      <p class="lead-text d-lg-none">בחרו לכל כרטיסייה קטגוריה מהתפריט.</p>
+      <p id="sortHelp" class="small text-body-secondary d-none d-lg-block">במקלדת: עברו לכרטיסייה עם Tab והקישו 1, 2 או 3 כדי להעביר אותה לקטגוריה, או 0 כדי להחזיר אותה.</p>
+
+      <div id="sortPool" class="sort-list sort-pool mb-4" aria-label="כרטיסיות שעוד לא מוינו">
+        <article class="sort-card card" data-answer="sun" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">יעל הוציאה את הצמח מהסלון המוצל למרפסת, ביום שמשי ראשון אחרי החורף. כבר בערב הופיעו בעלים העליונים אזורים בהירים ודהויים.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel1">קטגוריה למקרה 1</label><select id="sortSel1" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+        <article class="sort-card card" data-answer="over" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">עומר העביר צמח קטן לעציץ ענק, "שיהיה לו מקום לגדול". אחרי כמה שבועות הצמח נבול, אף שהאדמה עדיין לחה.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel2">קטגוריה למקרה 2</label><select id="sortSel2" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+        <article class="sort-card card" data-answer="under" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">אחרי שבועיים של חופשה, האדמה התכווצה ונפרדה מדפנות העציץ, והמים שנשפכים זורמים ישר לצלחת.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel3">קטגוריה למקרה 3</label><select id="sortSel3" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+        <article class="sort-card card" data-answer="over" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">בצלחת שמתחת לעציץ תמיד עומדים מים, וזבובונים קטנים מתעופפים סביב האדמה.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel4">קטגוריה למקרה 4</label><select id="sortSel4" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+        <article class="sort-card card" data-answer="sun" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">הצמח הועבר מפינת החדר לאדן חלון שהשמש פוגעת בו בצהריים. רק העלים שפונים לחלון שינו את צבעם.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel5">קטגוריה למקרה 5</label><select id="sortSel5" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+        <article class="sort-card card" data-answer="under" tabindex="0" aria-describedby="sortHelp"><div class="card-body">
+          <p class="card-text">הצמח גדל בעציץ חרס קטן ליד תנור חימום. כשמרימים את העציץ הוא קל מאוד, והעלים רפויים.</p>
+          <label class="form-label small fw-bold d-lg-none mb-1" for="sortSel6">קטגוריה למקרה 6</label><select id="sortSel6" class="form-select d-lg-none"></select>
+          <p class="sort-mark small fw-bold m-0 mt-2"></p></div></article>
+      </div>
+
+      <div class="row g-3 d-none d-lg-flex">
+        <div class="col-lg-4"><div class="zone h-100 d-flex flex-column"><h3 class="card-title-text h5">1 · צריבת שמש</h3><div class="sort-list zone-list flex-grow-1" data-zone="sun" aria-label="צריבת שמש"></div></div></div>
+        <div class="col-lg-4"><div class="zone h-100 d-flex flex-column"><h3 class="card-title-text h5">2 · השקיית יתר</h3><div class="sort-list zone-list flex-grow-1" data-zone="over" aria-label="השקיית יתר"></div></div></div>
+        <div class="col-lg-4"><div class="zone h-100 d-flex flex-column"><h3 class="card-title-text h5">3 · מחסור במים</h3><div class="sort-list zone-list flex-grow-1" data-zone="under" aria-label="מחסור במים"></div></div></div>
+      </div>
+      <div class="d-flex flex-wrap gap-3 mt-4">
+        <button type="button" id="checkSort" class="btn btn-brand rounded-pill px-4">בדיקה</button>
+        <button type="button" id="resetSort" class="btn btn-ghost rounded-pill px-4">נסו שוב</button>
+      </div>
+      <div id="sortFeedback" class="mt-3" aria-live="polite"></div>
+    </section>
+
+    <!-- Section 5: graded closing case (own form and submit button; feeds the LMS score) -->
+    <section id="closing-case" class="panel" aria-labelledby="closingTitle">
+      <div class="mx-auto narrow">
+        <h2 id="closingTitle" class="section-title">מקרה לסיום: מה למדתם?</h2>
+        <p class="lead-text mb-4">קראו את המקרה וענו על שתי השאלות. התשובות כאן נכנסות לציון שלכם ביחידה.</p>
+        <form id="closingForm" class="card" novalidate>
+          <div class="card-body p-4 p-lg-5 d-flex flex-column gap-4">
+            <p id="quizCase" class="m-0">דנה העבירה את הצמח שלה מהמסדרון לאדן חלון שהשמש פוגעת בו בצהריים. אחרי יומיים הופיעו כתמים בהירים ויבשים, רק בעלים שפונים לחלון. היא משקה כרגיל, פעם בשבוע.</p>
+            <fieldset aria-describedby="quizCase causeError">
+              <legend class="fs-6 fw-bold">מה הגורם הסביר ביותר?</legend>
+              <div class="form-check"><input class="form-check-input" type="radio" name="cause" id="cause1" value="over"><label class="form-check-label" for="cause1">השקיית יתר</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="cause" id="cause2" value="sun"><label class="form-check-label" for="cause2">צריבת שמש</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="cause" id="cause3" value="under"><label class="form-check-label" for="cause3">מחסור במים</label></div>
+              <p id="causeError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <fieldset aria-describedby="quizCase checksHint checksError">
+              <legend class="fs-6 fw-bold">מה כדאי לבדוק לפני שמחליטים מה לעשות?</legend>
+              <p id="checksHint" class="small text-body-secondary">אפשר לבחור יותר מתשובה אחת.</p>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="checks" id="checks1" value="side"><label class="form-check-label" for="checks1">אם הכתמים מופיעים רק בעלים שפונים לשמש</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="checks" id="checks2" value="fertilize"><label class="form-check-label" for="checks2">להוסיף דשן ולראות אם המצב משתפר</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="checks" id="checks3" value="soil"><label class="form-check-label" for="checks3">את מצב האדמה בעומק של פרק אצבע</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="checks" id="checks4" value="price"><label class="form-check-label" for="checks4">כמה עלה הצמח במשתלה</label></div>
+              <p id="checksError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <div><button type="submit" class="btn btn-brand btn-lg rounded-pill px-4">הגשה</button></div>
+            <div id="closingFeedback" aria-live="polite"></div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Section 6: personal care-habits questionnaire (no grade) -->
+    <section id="habits" class="panel" aria-labelledby="habitsTitle">
+      <div class="mx-auto narrow">
+        <h2 id="habitsTitle" class="section-title">איך אתם מטפלים בצמחים שלכם?</h2>
+        <p class="lead-text mb-4">ענו על כמה שאלות קצרות על הרגלי הטיפול שלכם, ובסוף תקבלו משוב עם טיפים שיעזרו לכם לשמור על הצמחים בריאים. בשאלות על ההרגלים אין תשובות נכונות או שגויות.</p>
+        <form id="habitsForm" class="card" novalidate>
+          <div class="card-body p-4 p-lg-5 d-flex flex-column gap-4">
+            <div>
+              <label for="plantName" class="form-label fw-bold">על איזה צמח תחשבו כשתענו? (למשל: פיקוס)</label>
+              <input type="text" id="plantName" class="form-control" maxlength="30" autocomplete="off" aria-describedby="plantNameError">
+              <p id="plantNameError" class="invalid-feedback"></p>
+            </div>
+            <div>
+              <label for="plantCount" class="form-label fw-bold">בכמה צמחי בית אתם מטפלים?</label>
+              <input type="number" id="plantCount" class="form-control" min="1" max="99" step="1" inputmode="numeric" aria-describedby="plantCountError">
+              <p id="plantCountError" class="invalid-feedback"></p>
+            </div>
+            <fieldset aria-describedby="whenError">
+              <legend class="fs-6 fw-bold">איך אתם מחליטים מתי להשקות?</legend>
+              <div class="form-check"><input class="form-check-input" type="radio" name="when" id="when1" value="schedule"><label class="form-check-label" for="when1">ביום קבוע בשבוע</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="when" id="when2" value="looks"><label class="form-check-label" for="when2">כשהצמח נראה נבול או "עצוב"</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="when" id="when3" value="soil"><label class="form-check-label" for="when3">אחרי שאני בודק/ת שהאדמה התייבשה</label></div>
+              <p id="whenError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <fieldset aria-describedby="checkError">
+              <legend class="fs-6 fw-bold">באיזו תדירות אתם בודקים את מצב האדמה?</legend>
+              <div class="form-check"><input class="form-check-input" type="radio" name="check" id="check1" value="never"><label class="form-check-label" for="check1">כמעט אף פעם</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="check" id="check2" value="sometimes"><label class="form-check-label" for="check2">רק כשנראה לי שמשהו לא בסדר</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="check" id="check3" value="always"><label class="form-check-label" for="check3">לפני כל השקיה</label></div>
+              <p id="checkError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <fieldset aria-describedby="lightError">
+              <legend class="fs-6 fw-bold">איפה הצמח נמצא מבחינת אור?</legend>
+              <div class="form-check"><input class="form-check-input" type="radio" name="light" id="light1" value="direct"><label class="form-check-label" for="light1">בחלון שהשמש פוגעת בו ישירות רוב היום</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="light" id="light2" value="bright"><label class="form-check-label" for="light2">ליד חלון מואר, בלי שמש ישירה או מאחורי וילון</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="light" id="light3" value="dim"><label class="form-check-label" for="light3">בפינה רחוקה מהחלון</label></div>
+              <div class="form-check"><input class="form-check-input" type="radio" name="light" id="light4" value="moved"><label class="form-check-label" for="light4">העברתי אותו לאחרונה למקום חדש</label></div>
+              <p id="lightError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <fieldset aria-describedby="potHint potError">
+              <legend class="fs-6 fw-bold">מה נכון לגבי העציץ שלכם?</legend>
+              <p id="potHint" class="small text-body-secondary">אפשר לבחור יותר מתשובה אחת.</p>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="pot" id="pot1" value="holes"><label class="form-check-label" for="pot1">יש לו חורי ניקוז בתחתית</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="pot" id="pot2" value="saucer"><label class="form-check-label" for="pot2">אני מרוקן/ת את הצלחת אחרי ההשקיה</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="pot" id="pot3" value="cachepot"><label class="form-check-label" for="pot3">הצמח שתול ישר בעציץ נוי בלי חורים</label></div>
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="pot" id="pot4" value="unknown"><label class="form-check-label" for="pot4">לא בדקתי</label></div>
+              <p id="potError" class="invalid-feedback d-block"></p>
+            </fieldset>
+            <div><button type="submit" class="btn btn-brand btn-lg rounded-pill px-4">לקבלת המשוב שלי</button></div>
+            <div id="habitsFeedback" aria-live="polite"></div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Section 7: closing message -->
+    <section id="summary" class="panel photo-panel summary-photo d-flex align-items-center" aria-labelledby="summaryTitle">
+      <div class="row w-100 mx-0">
+        <div class="col-lg-6 d-flex flex-column gap-3 px-0">
+          <h2 id="summaryTitle" class="section-title m-0">סיכום</h2>
+          <p class="lead-text m-0">כדי להבין מה הצמח צריך, מתבוננים בו, בודקים את תנאי הגידול שלו ולא ממהרים להסיק מסקנות. סימן אחד הוא רק רמז, והתמונה המלאה מגיעה מכמה בדיקות יחד. אם הסימנים נמשכים, צוות המשתלה ישמח לעזור.</p>
+          <p class="closing-line m-0">קודם מתבוננים, אחר כך משקים</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer py-4 mt-4">
+    <div class="container d-flex flex-wrap gap-4 justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <svg class="logo" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="21" fill="#FBF3EA"/><path d="M22 33 V20" stroke="#1E4636" stroke-width="2.5" stroke-linecap="round"/><path d="M22 22 C14 22 11 16 12 11 C18 11 22 15 22 22 Z" fill="#C9934E"/><path d="M22 20 C29 20 33 14 32 9 C25 9 22 14 22 20 Z" fill="#2F6B4F"/></svg>
+        <strong>משתלת כפתור ופרח</strong>
+      </div>
+      <div class="small">
+        <p class="mb-0">© 2026 משתלת כפתור ופרח</p>
+        <p class="mb-0">קרדיטים: Bootstrap, SortableJS, גופני Google Fonts. התמונות וטפט הרקע נוצרו על ידי צוות הפרויקט באמצעות AI ב-Gemini, ב-ChatGPT וב-Magnific. הסרטון נוצר באמצעות NotebookLM, והלוגו עוצב בעזרת Claude.</p>
+        <p class="mb-0">מקורות מידע: שירותי ההדרכה (Extension) של אוניברסיטאות Clemson, UConn, Iowa State ו-Georgia.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <!-- pipwerks SCORM 1.2 wrapper (unchanged); must load before main.js -->
+  <script src="js/SCORM_API_wrapper.js?v=2.4.0"></script>
+  <script src="js/main.js?v=2.4.0"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# IDE and OS files
+.idea/
+Thumbs.db
+.DS_Store
+# Built SCORM packages live outside the repo
+*.zip

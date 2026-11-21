@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="kaftorPerahLeafSCORM12" version="1.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+    http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+
+  <!-- General package info -->
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+
+  <!-- Course structure: one SCO -->
+  <organizations default="org1">
+    <organization identifier="org1">
+      <title>משתלת כפתור ופרח</title>
+      <item identifier="item1" identifierref="resource1" isvisible="true">
+        <title>מה העלה מספר לנו?</title>
+      </item>
+    </organization>
+  </organizations>
+
+  <!-- Local files only (Bootstrap, SortableJS and Google Fonts load from CDN) -->
+  <resources>
+    <resource identifier="resource1" type="webcontent" adlcp:scormType="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="css/style.css"/>
+      <file href="js/SCORM_API_wrapper.js"/>
+      <file href="js/main.js"/>
+      <file href="images/healthy-plant-hero.jpg"/>
+      <file href="images/jungle-wallpaper.jpg"/>
+      <file href="images/closing-plant.jpg"/>
+      <file href="images/sunburn-leaf.jpg"/>
+      <file href="images/overwatering-leaf.jpg"/>
+      <file href="images/underwatering-plant.jpg"/>
+      <file href="videos/plant-care-tips.mp4"/>
+    </resource>
+  </resources>
+
+</manifest>
