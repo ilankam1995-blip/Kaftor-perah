@@ -15,7 +15,7 @@ const LMS_TEXT = {
   fallbackName: 'לומדת/לומד יקר/ה'
 };
 // connected: init succeeded · canSave: connected and not in review/browse mode · ended: quit already called
-const lms = { connected: false, canSave: false, ended: false };
+const lms = { connected: false, canSave: false, ended: false, wasPassed: false, startedAt: Date.now(), closingSent: false, habitsSent: false };
 
 // Guarded read: never touches the API outside the LMS
 function scormGet(field) {
@@ -42,25 +42,75 @@ function initLms() {
   const mode = scormGet('cmi.core.lesson_mode'); // normal | review | browse
   lms.canSave = mode !== 'review' && mode !== 'browse';
   if (!lms.canSave) showLmsNotice(LMS_TEXT.review);
+  lms.wasPassed = scormGet('cmi.core.lesson_status') === 'passed'; // never downgrade a passed status
   $('learner-name').textContent = formatLearnerName(scormGet('cmi.core.student_name'));
+}
+
+// Guarded write: logs the field and error code when the LMS rejects a value
+function scormSet(field, value) {
+  const ok = pipwerks.SCORM.set(field, String(value));
+  if (!ok) console.warn(`[SCORM] set failed: ${field} = "${value}" (error ${pipwerks.SCORM.debug.getCode()})`);
+  return ok;
+}
+
+// SCORM 1.2 timespan: HHHH:MM:SS
+function formatSessionTime(ms) {
+  const sec = Math.floor(ms / 1000);
+  const pad = (n, len = 2) => String(n).padStart(len, '0');
+  return `${pad(Math.floor(sec / 3600), 4)}:${pad(Math.floor(sec / 60) % 60)}:${pad(sec % 60)}`;
 }
 
 // Close the session exactly once (pagehide and beforeunload may both fire)
 function endLmsSession() {
   if (!lms.connected || lms.ended) return;
   lms.ended = true;
+  if (lms.canSave) scormSet('cmi.core.session_time', formatSessionTime(Date.now() - lms.startedAt));
   pipwerks.SCORM.quit(); // wrapper sets cmi.core.exit (suspend/logout) and saves before LMSFinish
 }
+
+/* ===== SCORM reporting (milestones 2-3): interactions, score and status ===== */
+const PASS_MARK = 60;
+const letter = (i) => 'abcdefghij'[i];
+// First attempt per game: retries keep teaching, but only the first attempt is reported
+const firstTry = { mystery: [], sorting: null };
+
+// Append interactions after the existing ones (never from 0), then save once
+function sendInteractions(list) {
+  if (!lms.canSave) return false;
+  const time = new Date().toTimeString().slice(0, 8); // HH:MM:SS
+  let ok = true;
+  list.forEach((it) => {
+    const base = `cmi.interactions.${parseInt(scormGet('cmi.interactions._count'), 10) || 0}.`;
+    ok = scormSet(base + 'id', it.id) && ok; // id first: it creates the record
+    ok = scormSet(base + 'type', it.type) && ok;
+    ok = scormSet(base + 'student_response', it.response) && ok;
+    if (it.pattern) ok = scormSet(base + 'correct_responses.0.pattern', it.pattern) && ok;
+    ok = scormSet(base + 'result', it.result) && ok;
+    ok = scormSet(base + 'time', time) && ok;
+  });
+  return pipwerks.SCORM.save() && ok;
+}
+
+// Score 0-100 and passed/failed; a passed status is never lowered
+function sendScore(score) {
+  if (!lms.canSave) return false;
+  const status = lms.wasPassed || score >= PASS_MARK ? 'passed' : 'failed';
+  const ok = [scormSet('cmi.core.score.min', 0), scormSet('cmi.core.score.max', 100),
+    scormSet('cmi.core.score.raw', score), scormSet('cmi.core.lesson_status', status)].every(Boolean);
+  return pipwerks.SCORM.save() && ok;
+}
+
+// 1 -> correct, 0 -> wrong, partial -> a number such as 0.5 or 0.67
+const resultOf = (ratio) => (ratio === 1 ? 'correct' : ratio === 0 ? 'wrong' : String(Math.round(ratio * 100) / 100));
 
 initLms();
 window.addEventListener('pagehide', endLmsSession);
 window.addEventListener('beforeunload', endLmsSession);
 
-// Single place for completion reporting (SCORM hook for stage 2)
+// Completion flags per part (LMS reporting happens on the closing-case submit and the questionnaire)
 const progress = { mystery: false, sorting: false, closing: false, habits: false };
 function reportProgress(part) {
   progress[part] = true;
-  // TODO stage 2: send progress to the LMS via the SCORM API
 }
 
 /* ===== Mystery case: first question shows at once, clues can be revealed any time ===== */
@@ -114,6 +164,7 @@ $('caseOptions').addEventListener('click', (e) => {
   const btn = e.target.closest('.case-option');
   if (!btn) return;
   const option = steps[step].options[btn.dataset.index];
+  firstTry.mystery[step] ??= { response: letter(+btn.dataset.index), ok: option.good }; // report the first choice only
   $('caseOptions').querySelectorAll('.case-option').forEach((b) => { b.className = 'case-option'; b.setAttribute('aria-pressed', 'false'); });
   btn.classList.add(option.good ? 'is-good' : 'is-weak');
   btn.setAttribute('aria-pressed', 'true');
@@ -227,6 +278,8 @@ $('checkSort').addEventListener('click', () => {
     c.querySelector('.sort-mark').textContent = ok ? '✓ במקום הנכון' : '✗ לא במקום הנכון';
     correct += ok;
   });
+  // Report the first full check only: card number (page order) . category letter (a sun, b over, c under)
+  firstTry.sorting ??= { response: cards.map((c, i) => `${i + 1}.${letter(zoneKeys.indexOf(choiceOf(c)))}`).join(','), correct };
   if (correct === cards.length) {
     showFeedback($('sortFeedback'), 'success', '<strong>מעולה! מיינתם נכון את כל ששת המקרים.</strong> שמתם לב לפרטים של כל מקרה, ולא רק לסימן עצמו.');
     reportProgress('sorting');
@@ -249,6 +302,13 @@ const form = $('habitsForm');
 const closingForm = $('closingForm');
 // Input names are unique across both forms, so one page-wide lookup serves both
 const picked = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map((i) => i.value);
+// Form values -> report letters, in page order (SCORM_SPEC.md appendix A)
+const LETTERS = {
+  cause: ['over', 'sun', 'under'], checks: ['side', 'fertilize', 'soil', 'price'],
+  when: ['schedule', 'looks', 'soil'], check: ['never', 'sometimes', 'always'],
+  light: ['direct', 'bright', 'dim', 'moved'], pot: ['holes', 'saucer', 'cachepot', 'unknown']
+};
+const toLetters = (name) => picked(name).map((v) => letter(LETTERS[name].indexOf(v))).join(',');
 // Focus the first invalid field of a form
 const focusFirstInvalid = (f) => f.querySelector('.is-invalid, fieldset:has(.invalid-feedback:not(:empty)) input')?.focus();
 
@@ -353,18 +413,55 @@ form.addEventListener('submit', (e) => {
     (tips.improve.length ? `<p class="fw-bold mb-1 mt-3">מה כדאי לשפר</p>${list(tips.improve)}` : '<p class="mt-3 mb-0">ההרגלים שלכם כבר מצוינים. המשיכו כך!</p>') +
     '<p class="small mt-3 mb-0">הטיפים כלליים ולא מאבחנים צמח מסוים. אם הצמח נראה חולה, פנו לצוות המשתלה.</p>');
   reportProgress('habits');
+  if (!lms.habitsSent) { // only the first valid submission goes to the report
+    lms.habitsSent = true;
+    sendInteractions([
+      { id: 'Q06_plant_name', type: 'fill-in', response: name, result: 'neutral' },
+      { id: 'Q07_plant_count', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
+      ...['when', 'check', 'light', 'pot'].map((q, i) => ({
+        id: ['Q08_watering_timing', 'Q09_soil_check_habit', 'Q10_light_location', 'Q11_pot_drainage'][i],
+        type: 'choice', response: toLetters(q), result: 'neutral'
+      }))
+    ]);
+  }
 });
 
 closingForm.addEventListener('submit', (e) => {
   e.preventDefault();
+  if (lms.closingSent) return; // double click / resubmit: report once
+  // Games must be played first, checked before any feedback reveals answers
+  const missing = [!firstTry.mystery[1] && '"תיק הצמח המסתורי"', !firstTry.sorting && '"עזרו לחבר!"'].filter(Boolean);
+  if (missing.length) {
+    showFeedback($('closingFeedback'), 'warning', `כדי להגיש, השלימו קודם את ${missing.join(' ואת ')}.`);
+    return;
+  }
   if (!validateClosing()) {
     showFeedback($('closingFeedback'), 'danger', 'חסרות תשובות. תקנו את השדות המסומנים ושלחו שוב.');
     focusFirstInvalid(closingForm);
     return;
   }
+  lms.closingSent = true;
+  closingForm.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
   const result = gradeQuiz();
+  const [m1, m2] = firstTry.mystery;
+  const sort = firstTry.sorting;
+  const causeOk = picked('cause')[0] === quiz.cause;
+  const checksScore = result.score - causeOk; // gradeQuiz total = cause (0/1) + checks (0/0.5/1)
+  // Three graded parts, a third each (SCORM_SPEC.md part 5)
+  const score = Math.round(((m1.ok + m2.ok) / 2 + sort.correct / 6 + result.score / 2) / 3 * 100);
+  const sent = sendInteractions([
+    { id: 'Q01_mystery_check', type: 'choice', response: m1.response, pattern: 'a', result: resultOf(+m1.ok) },
+    { id: 'Q02_mystery_cause', type: 'choice', response: m2.response, pattern: 'a', result: resultOf(+m2.ok) },
+    { id: 'Q03_sorting_cases', type: 'matching', response: sort.response, pattern: '1.a,2.b,3.c,4.b,5.a,6.c', result: resultOf(sort.correct / 6) },
+    { id: 'Q04_closing_cause', type: 'choice', response: toLetters('cause'), pattern: 'b', result: resultOf(+causeOk) },
+    { id: 'Q05_closing_checks', type: 'choice', response: toLetters('checks'), pattern: 'a,c', result: resultOf(checksScore) }
+  ]);
+  const saved = sendScore(score) && sent;
+  const note = !lms.canSave ? 'הציון לא נשמר, כי היחידה פועלת מחוץ למערכת הקורס או במצב צפייה.'
+    : saved ? 'ההגשה נשמרה במערכת הקורס.' : 'ההגשה לא נשמרה במערכת הקורס. צלמו את המסך ופנו למנחה.';
   showFeedback($('closingFeedback'), 'light border',
-    `<h3 class="card-title-text h5">התוצאה שלכם: ${result.score} מתוך 2</h3>${result.html}`);
+    `<h3 class="card-title-text h5">התוצאה שלכם: ${result.score} מתוך 2</h3>${result.html}<hr>` +
+    `<p class="fw-bold mb-1">הציון שלכם ביחידה: ${score} (ציון מעבר: ${PASS_MARK})</p><p class="mb-0">${note}</p>`);
   progress.quizScore = result.score;
   reportProgress('closing');
 });
