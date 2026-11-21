@@ -86,7 +86,18 @@ body { padding-top: 70px; }
 .case-option.is-good { border-color: var(--c-dark); background: var(--bs-success-bg-subtle); }
 .case-option.is-weak { border-color: var(--c-red-dark); background: var(--c-blush); }
 .case-option:disabled { cursor: default; }
-.case-option:disabled:not(.is-good, .is-weak) { color: var(--bs-secondary-color); }
+.case-option:disabled:not(.is-good, .is-weak, .is-picked) { color: var(--bs-secondary-color); }
+.case-option.is-picked:not(.is-good, .is-weak) { border-color: var(--c-dark); box-shadow: inset 0 0 0 1px var(--c-dark); }
+.answer-tag { display: block; margin-top: 4px; font-size: .875rem; font-weight: 700; }
+.case-option.is-good .answer-tag { color: var(--c-dark); }
+.case-option.is-weak .answer-tag { color: var(--c-red-dark); }
+
+/* "Show answer": short why under the question, and right/wrong marks on the form itself */
+.answer-note { margin: 0; padding: .6rem 1rem; border-inline-start: 4px solid var(--c-leaf); background: var(--bs-success-bg-subtle); border-radius: 10px; }
+.answer-note.is-error { border-color: var(--c-red-dark); background: var(--c-blush); }
+#closingForm .form-check-input:disabled ~ .form-check-label { opacity: 1; }
+#closingForm .form-check.is-answer .form-check-label::after { content: ' ✓ תשובה נכונה'; font-weight: 700; color: var(--c-dark); }
+#closingForm .form-check.is-miss .form-check-label::after { content: ' ✗ לא נכון'; font-weight: 700; color: var(--c-red-dark); }
 
 /* ===== Flip cards: both faces share one grid cell, so the card fits the taller face ===== */
 .flip-card { perspective: 1200px; height: 100%; cursor: pointer; }

@@ -8,12 +8,14 @@ function showFeedback(container, type, html) {
   container.innerHTML = `<div class="alert alert-${type} m-0">${html}</div>`;
 }
 
+// Short answer explanation (1-2 lines) under a question, shown after "show answer"
+function showNote(container, html) {
+  container.innerHTML = `<p class="answer-note">${html}</p>`;
+}
+
 /* ===== SCORM 1.2 connection (milestone 1: connect, learner name, outside-LMS behavior) ===== */
-const LMS_TEXT = {
-  outside: 'היחידה פועלת מחוץ למערכת הקורס: אפשר לתרגל, אבל התשובות והציון לא יישמרו.',
-  review: 'זהו מצב צפייה: אפשר לעבור על היחידה, אבל התשובות לא יישמרו.',
-  fallbackName: 'לומדת/לומד יקר/ה'
-};
+// No banner inside the unit: outside the LMS or in review mode, only the final submit message says nothing was sent
+const LMS_TEXT = { fallbackName: 'לומדת/לומד יקר/ה' };
 // connected: init succeeded · canSave: connected and not in review/browse mode · ended: quit already called
 const lms = { connected: false, canSave: false, ended: false, wasPassed: false, startedAt: Date.now(), unitSent: false };
 
@@ -28,20 +30,14 @@ function formatLearnerName(raw) {
   return parts.length ? (parts.length > 1 ? `${parts.slice(1).join(' ')} ${parts[0]}` : parts[0]) : LMS_TEXT.fallbackName;
 }
 
-function showLmsNotice(text) {
-  $('lmsNotice').textContent = text;
-  $('lmsNotice').hidden = false;
-}
-
 function initLms() {
   if (window.pipwerks) {
     pipwerks.SCORM.version = '1.2'; // look only for the SCORM 1.2 API
     lms.connected = pipwerks.SCORM.init(); // wrapper sets lesson_status = incomplete on first entry
   }
-  if (!lms.connected) return showLmsNotice(LMS_TEXT.outside);
+  if (!lms.connected) return; // practice only: nothing is saved
   const mode = scormGet('cmi.core.lesson_mode'); // normal | review | browse
   lms.canSave = mode !== 'review' && mode !== 'browse';
-  if (!lms.canSave) showLmsNotice(LMS_TEXT.review);
   lms.wasPassed = scormGet('cmi.core.lesson_status') === 'passed'; // never downgrade a passed status
   $('learner-name').textContent = formatLearnerName(scormGet('cmi.core.student_name'));
 }
@@ -141,7 +137,6 @@ const steps = [
         why: 'לא סביר: הצמח רחוק מהחלון ולא מקבל שמש ישירה.' }
     ] }
 ];
-const caseEnd = '<strong>מה מיכל יכולה לעשות?</strong> לחכות שהאדמה תתייבש מעט לפני ההשקיה הבאה, לרוקן את המים שהצטברו ולשתול את הפיקוס בעציץ עם חורי ניקוז, שאותו אפשר להכניס לעציץ הנוי. שימו לב שהמסקנה התבססה על כמה בדיקות יחד ולא על הסימן לבדו. אם הצמח ממשיך להיחלש, כדאי לפנות לצוות המשתלה.';
 let clueCount = 1;
 let step = 0;
 let answered = false; // one answer per question: "what you answered stands"
@@ -160,6 +155,7 @@ function renderStep() {
   $('caseOptions').innerHTML = s.options.map((o, i) => `<button type="button" class="case-option" data-index="${i}" aria-pressed="false">${o.text}</button>`).join('');
   $('caseFeedback').innerHTML = '';
   $('caseNext').hidden = true;
+  $('caseShow').hidden = true;
   answered = false;
 }
 
@@ -170,15 +166,29 @@ $('caseOptions').addEventListener('click', (e) => {
   const options = steps[step].options;
   const option = options[btn.dataset.index];
   firstTry.mystery[step] ??= { response: letter(+btn.dataset.index), ok: option.good }; // report the first round only
-  btn.classList.add(option.good ? 'is-good' : 'is-weak');
+  btn.classList.add('is-picked');
   btn.setAttribute('aria-pressed', 'true');
   $('caseOptions').querySelectorAll('.case-option').forEach((b) => { b.disabled = true; });
-  const fitting = option.good ? '' : `<p class="mt-2 mb-0"><strong>התשובה המתאימה:</strong> ${options.find((o) => o.good).text}</p>`;
   const last = step === steps.length - 1;
-  showFeedback($('caseFeedback'), option.good ? 'success' : 'danger', option.why + fitting + (last ? `<hr>${caseEnd}` : ''));
+  $('caseShow').hidden = false;
   $('caseNext').hidden = last;
   $('caseRestart').hidden = !last;
   if (last) reportProgress('mystery');
+});
+
+// Show answer: mark the fitting option (and a wrong pick) on the options themselves, plus a short why
+$('caseShow').addEventListener('click', () => {
+  const options = steps[step].options;
+  $('caseOptions').querySelectorAll('.case-option').forEach((b) => {
+    const { good } = options[b.dataset.index];
+    const picked = b.classList.contains('is-picked');
+    if (!good && !picked) return;
+    b.classList.add(good ? 'is-good' : 'is-weak');
+    b.insertAdjacentHTML('beforeend', `<span class="answer-tag">${good ? '✓ התשובה הנכונה' : '✗ התשובה שלכם'}</span>`);
+  });
+  showNote($('caseFeedback'), options.find((o) => o.good).why.replace(/^נכון!\s*/, ''));
+  $('caseShow').hidden = true;
+  ($('caseNext').hidden ? $('caseRestart') : $('caseNext')).focus();
 });
 
 $('nextClue').addEventListener('click', () => { clueCount++; renderClues(); });
@@ -230,6 +240,7 @@ const choiceOf = (card) => (desktop.matches ? card.parentElement.dataset.zone ||
 function clearMarks() {
   cards.forEach((c) => { c.classList.remove('is-correct', 'is-wrong'); c.querySelector('.sort-mark').textContent = ''; });
   $('sortFeedback').innerHTML = '';
+  $('sortShow').hidden = true;
 }
 
 // Move a card on desktop and keep its (hidden) select in sync
@@ -274,7 +285,7 @@ $('checkSort').addEventListener('click', () => {
   clearMarks();
   const unsorted = cards.filter((c) => !choiceOf(c)).length;
   if (unsorted) {
-    showFeedback($('sortFeedback'), 'warning', `נשארו ${unsorted} כרטיסיות שעדיין לא מוינו. מיינו את כולן ואז לחצו על "בדיקה".`);
+    $('sortFeedback').innerHTML = `<p class="small fw-bold m-0">נשארו ${unsorted} כרטיסיות שעדיין לא מוינו. מיינו את כולן ואז לחצו על "בדיקה".</p>`;
     return;
   }
   let correct = 0;
@@ -287,16 +298,25 @@ $('checkSort').addEventListener('click', () => {
   // Report the first full check only: card number (page order) . category letter (a sun, b over, c under)
   firstTry.sorting ??= { response: cards.map((c, i) => `${i + 1}.${letter(zoneKeys.indexOf(choiceOf(c)))}`).join(','), correct };
   updateSubmitState();
-  if (correct === cards.length) {
-    showFeedback($('sortFeedback'), 'success', '<strong>מעולה! מיינתם נכון את כל ששת המקרים.</strong> שמתם לב לפרטים של כל מקרה, ולא רק לסימן עצמו.');
-    reportProgress('sorting');
-  } else {
-    // Partial (some right) gets a warning, all wrong gets danger; the tip is shared
-    const tip = 'בכרטיסיות המסומנות כדאי לחפש את הפרט שמבדיל בין הגורמים, למשל מצב האדמה, סוג העציץ או שינוי במיקום.';
-    showFeedback($('sortFeedback'), correct ? 'warning' : 'danger', correct
-      ? `<strong>כמעט! מיינתם נכון ${correct} מתוך ${cards.length} מקרים.</strong> ${tip}`
-      : `<strong>אף מקרה לא מוין נכון הפעם.</strong> ${tip}`);
-  }
+  if (correct === cards.length) reportProgress('sorting');
+  $('sortFeedback').innerHTML = `<p class="small fw-bold m-0">מיינתם נכון ${correct} מתוך ${cards.length} מקרים.</p>`;
+  $('sortShow').hidden = false;
+});
+
+// Show answer: move every card to its right category and give the short why
+$('sortShow').addEventListener('click', () => {
+  cards.forEach((c) => {
+    const key = c.dataset.answer;
+    c.querySelector('select').value = key;
+    (desktop.matches ? listFor(key) : pool).appendChild(c);
+  });
+  clearMarks();
+  cards.forEach((c) => {
+    c.classList.add('is-correct');
+    c.querySelector('.sort-mark').textContent = `✓ ${categories[c.dataset.answer]}`;
+  });
+  showNote($('sortFeedback'), 'ההבדל נמצא בפרטים: שינוי מיקום לשמש מצביע על צריבה, אדמה רטובה או מים בצלחת על השקיית יתר, ואדמה יבשה ועציץ קל על מחסור במים.');
+  $('checkSort').focus();
 });
 
 $('resetSort').addEventListener('click', () => {
@@ -435,19 +455,30 @@ closingForm.addEventListener('submit', (e) => {
   e.preventDefault();
   if (firstTry.closing) return; // one check: answers lock after it
   if (!validateClosing()) {
-    showFeedback($('closingFeedback'), 'danger', 'חסרות תשובות. תקנו את השדות המסומנים ושלחו שוב.');
+    $('closingFeedback').innerHTML = '';
     focusFirstInvalid(closingForm);
     return;
   }
-  closingForm.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
+  closingForm.querySelectorAll('input, button[type="submit"]').forEach((el) => { el.disabled = true; });
   const result = gradeQuiz();
   const causeOk = picked('cause')[0] === quiz.cause;
   firstTry.closing = { score: result.score, causeOk, checksScore: result.score - causeOk, // total = cause (0/1) + checks (0/0.5/1)
     cause: toLetters('cause'), checks: toLetters('checks') };
-  showFeedback($('closingFeedback'), 'light border',
-    `<h3 class="card-title-text h5">התוצאה שלכם: ${result.score} מתוך 2</h3>${result.html}`);
+  $('closingFeedback').innerHTML = '<p class="small fw-bold m-0">התשובות נשמרו בלומדה.</p>';
+  $('closingShow').hidden = false;
   progress.quizScore = result.score;
   reportProgress('closing');
+});
+
+// Show answer: mark right options (and wrong picks) on the form itself, plus a short why
+$('closingShow').addEventListener('click', () => {
+  closingForm.querySelectorAll('[name="cause"], [name="checks"]').forEach((input) => {
+    const right = input.name === 'cause' ? input.value === quiz.cause : quiz.checks.includes(input.value);
+    input.closest('.form-check').classList.toggle('is-answer', right);
+    input.closest('.form-check').classList.toggle('is-miss', !right && input.checked);
+  });
+  showNote($('closingFeedback'), 'צריבת שמש: הכתמים הופיעו מיד אחרי המעבר לשמש ורק בעלים שפונים לחלון. כדי לשלול גורמים אחרים בודקים איפה הכתמים ומה מצב האדמה.');
+  $('closingShow').hidden = true;
 });
 
 /* ===== Unit submit: enabled after one attempt in every part; sends everything once ===== */
@@ -484,10 +515,12 @@ $('submitUnit').addEventListener('click', () => {
     ...firstTry.habits
   ]);
   const saved = sendScore(score) && sent;
-  const note = !lms.canSave ? 'הציון לא נשמר, כי היחידה פועלת מחוץ למערכת הקורס או במצב צפייה.'
-    : saved ? 'הלומדה הוגשה ונשמרה במערכת הקורס. אפשר לסגור את החלון.' : 'ההגשה לא נשמרה במערכת הקורס. צלמו את המסך ופנו למנחה.';
+  // The learner gets thanks only; the score goes to the LMS (SCORM_SPEC.md part 5)
+  const note = !lms.canSave ? '<strong>תודה שהשלמתם את הלומדה!</strong> הלומדה פתוחה כאן לתרגול בלבד, ולכן התשובות לא נשלחו למרצה.'
+    : saved ? '<strong>תודה!</strong> הלומדה נשלחה למרצה. אפשר לסגור את החלון.'
+      : '<strong>משהו השתבש והלומדה לא נשלחה.</strong> צלמו את המסך ופנו למרצה.';
   $('submitHint').textContent = '';
-  showFeedback($('submitFeedback'), saved || !lms.canSave ? 'light border' : 'danger',
-    `<p class="fw-bold mb-1">הציון שלכם ביחידה: ${score} (ציון מעבר: ${PASS_MARK})</p><p class="mb-0">${note}</p>`);
+  showNote($('submitFeedback'), note);
+  if (lms.canSave && !saved) $('submitFeedback').firstChild.classList.add('is-error');
 });
 updateSubmitState();
