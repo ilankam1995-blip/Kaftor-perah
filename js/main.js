@@ -482,20 +482,25 @@ $('closingShow').addEventListener('click', () => {
 });
 
 /* ===== Unit submit: enabled after one attempt in every part; sends everything once ===== */
+// [section anchor, label, tried once?]; the "left" line links to each missing part
 const PARTS = [
-  ['mystery', '"תיק הצמח המסתורי"', () => firstTry.mystery.length === steps.length],
-  ['sorting', '"עזרו לחבר!"', () => Boolean(firstTry.sorting)],
-  ['closing', '"מקרה לסיום"', () => Boolean(firstTry.closing)],
-  ['habits', '"איך אתם מטפלים בצמחים שלכם?"', () => Boolean(firstTry.habits)]
+  ['mystery', 'תיק הצמח המסתורי', () => firstTry.mystery.length === steps.length],
+  ['practice', 'עזרו לחבר!', () => Boolean(firstTry.sorting)],
+  ['closing-case', 'מקרה לסיום', () => Boolean(firstTry.closing)],
+  ['habits', 'איך אתם מטפלים בצמחים שלכם?', () => Boolean(firstTry.habits)]
 ];
 
 function updateSubmitState() {
   if (lms.unitSent) return;
-  const missing = PARTS.filter(([, , done]) => !done()).map(([, label]) => label);
+  const missing = PARTS.filter(([, , done]) => !done());
   $('submitUnit').disabled = missing.length > 0;
   $('submitHint').textContent = missing.length
-    ? `הכפתור ייפתח אחרי שתנסו כל חלק ביחידה. נשאר: ${missing.join(', ')}.`
+    ? 'הכפתור ייפתח אחרי שתנסו כל חלק ביחידה.'
     : 'ניסיתם את כל החלקים. אפשר להגיש.';
+  $('submitMissing').hidden = !missing.length;
+  $('submitMissing').innerHTML = missing.length
+    ? `<strong>נשאר:</strong> ${missing.map(([id, label]) => `<a href="#${id}">${label}</a>`).join(', ')}`
+    : '';
 }
 
 $('submitUnit').addEventListener('click', () => {
@@ -520,6 +525,7 @@ $('submitUnit').addEventListener('click', () => {
     : saved ? '<strong>תודה!</strong> הלומדה נשלחה למרצה. אפשר לסגור את החלון.'
       : '<strong>משהו השתבש והלומדה לא נשלחה.</strong> צלמו את המסך ופנו למרצה.';
   $('submitHint').textContent = '';
+  $('submitMissing').hidden = true;
   showNote($('submitFeedback'), note);
   if (lms.canSave && !saved) $('submitFeedback').firstChild.classList.add('is-error');
 });
