@@ -66,7 +66,6 @@ function endLmsSession() {
 
 /* ===== SCORM reporting (milestones 2-3): interactions, score and status ===== */
 const PASS_MARK = 60;
-const letter = (i) => 'abcdefghij'[i];
 // First attempt per game: retries keep teaching, but only the first attempt is reported
 const firstTry = { mystery: [], sorting: null, closing: null, habits: null };
 
@@ -79,8 +78,8 @@ function sendInteractions(list) {
     const base = `cmi.interactions.${parseInt(scormGet('cmi.interactions._count'), 10) || 0}.`;
     ok = scormSet(base + 'id', it.id) && ok; // id first: it creates the record
     ok = scormSet(base + 'type', it.type) && ok;
-    ok = scormSet(base + 'student_response', it.response) && ok;
-    if (it.pattern) ok = scormSet(base + 'correct_responses.0.pattern', it.pattern) && ok;
+    ok = scormSet(base + 'student_response', String(it.response).slice(0, 255)) && ok; // SCORM 1.2 limit
+    if (it.pattern) ok = scormSet(base + 'correct_responses.0.pattern', String(it.pattern).slice(0, 255)) && ok;
     ok = scormSet(base + 'result', it.result) && ok;
     ok = scormSet(base + 'time', time) && ok;
   });
@@ -155,7 +154,6 @@ function renderStep() {
   $('caseOptions').innerHTML = s.options.map((o, i) => `<button type="button" class="case-option" data-index="${i}" aria-pressed="false">${o.text}</button>`).join('');
   $('caseFeedback').innerHTML = '';
   $('caseNext').hidden = true;
-  $('caseShow').hidden = true;
   answered = false;
 }
 
@@ -165,30 +163,23 @@ $('caseOptions').addEventListener('click', (e) => {
   answered = true;
   const options = steps[step].options;
   const option = options[btn.dataset.index];
-  firstTry.mystery[step] ??= { response: letter(+btn.dataset.index), ok: option.good }; // report the first round only
+  const good = options.find((o) => o.good);
+  firstTry.mystery[step] ??= { response: option.text, pattern: good.text, ok: option.good }; // report the first round only
   btn.classList.add('is-picked');
   btn.setAttribute('aria-pressed', 'true');
-  $('caseOptions').querySelectorAll('.case-option').forEach((b) => { b.disabled = true; });
+  // Answer shows at once: the fitting option (and a wrong pick) are marked on the options, plus a short why
+  $('caseOptions').querySelectorAll('.case-option').forEach((b) => {
+    b.disabled = true;
+    const isGood = options[b.dataset.index].good;
+    if (!isGood && b !== btn) return;
+    b.classList.add(isGood ? 'is-good' : 'is-weak');
+    b.insertAdjacentHTML('beforeend', `<span class="answer-tag">${isGood ? '✓ התשובה הנכונה' : '✗ התשובה שלכם'}</span>`);
+  });
+  showNote($('caseFeedback'), good.why.replace(/^נכון!\s*/, ''));
   const last = step === steps.length - 1;
-  $('caseShow').hidden = false;
   $('caseNext').hidden = last;
   $('caseRestart').hidden = !last;
   if (last) reportProgress('mystery');
-});
-
-// Show answer: mark the fitting option (and a wrong pick) on the options themselves, plus a short why
-$('caseShow').addEventListener('click', () => {
-  const options = steps[step].options;
-  $('caseOptions').querySelectorAll('.case-option').forEach((b) => {
-    const { good } = options[b.dataset.index];
-    const picked = b.classList.contains('is-picked');
-    if (!good && !picked) return;
-    b.classList.add(good ? 'is-good' : 'is-weak');
-    b.insertAdjacentHTML('beforeend', `<span class="answer-tag">${good ? '✓ התשובה הנכונה' : '✗ התשובה שלכם'}</span>`);
-  });
-  showNote($('caseFeedback'), options.find((o) => o.good).why.replace(/^נכון!\s*/, ''));
-  $('caseShow').hidden = true;
-  ($('caseNext').hidden ? $('caseRestart') : $('caseNext')).focus();
 });
 
 $('nextClue').addEventListener('click', () => { clueCount++; renderClues(); });
@@ -295,8 +286,9 @@ $('checkSort').addEventListener('click', () => {
     c.querySelector('.sort-mark').textContent = ok ? '✓ במקום הנכון' : '✗ לא במקום הנכון';
     correct += ok;
   });
-  // Report the first full check only: card number (page order) . category letter (a sun, b over, c under)
-  firstTry.sorting ??= { response: cards.map((c, i) => `${i + 1}.${letter(zoneKeys.indexOf(choiceOf(c)))}`).join(','), correct };
+  // Report the first full check only, readable in the LMS: "card number (page order): category"
+  const pairs = (keyOf) => cards.map((c, i) => `${i + 1}: ${categories[keyOf(c)]}`).join('; ');
+  firstTry.sorting ??= { response: pairs(choiceOf), pattern: pairs((c) => c.dataset.answer), correct };
   updateSubmitState();
   if (correct === cards.length) reportProgress('sorting');
   $('sortFeedback').innerHTML = `<p class="small fw-bold m-0">מיינתם נכון ${correct} מתוך ${cards.length} מקרים.</p>`;
@@ -329,13 +321,9 @@ const form = $('habitsForm');
 const closingForm = $('closingForm');
 // Input names are unique across both forms, so one page-wide lookup serves both
 const picked = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map((i) => i.value);
-// Form values -> report letters, in page order (SCORM_SPEC.md appendix A)
-const LETTERS = {
-  cause: ['over', 'sun', 'under'], checks: ['side', 'fertilize', 'soil', 'price'],
-  when: ['schedule', 'looks', 'soil'], check: ['never', 'sometimes', 'always'],
-  light: ['direct', 'bright', 'dim', 'moved'], pot: ['holes', 'saucer', 'cachepot', 'unknown']
-};
-const toLetters = (name) => picked(name).map((v) => letter(LETTERS[name].indexOf(v))).join(',');
+// Report answers as their label text, so the LMS report reads on its own (SCORM_SPEC.md appendix A)
+const labelOf = (input) => document.querySelector(`label[for="${input.id}"]`).textContent.trim();
+const answerText = (name, only = (i) => i.checked) => [...document.querySelectorAll(`[name="${name}"]`)].filter(only).map(labelOf).join('; ');
 // Focus the first invalid field of a form
 const focusFirstInvalid = (f) => f.querySelector('.is-invalid, fieldset:has(.invalid-feedback:not(:empty)) input')?.focus();
 
@@ -400,23 +388,14 @@ const habitTips = {
 };
 
 // Closing case: graded questions (correct / partial / wrong)
-const quiz = { cause: 'sun', checks: ['side', 'soil'] };
-const verdicts = { correct: 'תשובה נכונה', partial: 'תשובה חלקית', wrong: 'תשובה שגויה' };
+const quiz = { cause: 'under', checks: ['soil', 'weight'] };
 function gradeQuiz() {
   const causeOk = picked('cause')[0] === quiz.cause;
   const chosen = picked('checks');
   const hits = chosen.filter((v) => quiz.checks.includes(v)).length;
-  const checksVerdict = hits === quiz.checks.length && chosen.length === hits ? 'correct' : hits ? 'partial' : 'wrong';
-  const line = (verdict, text) => `<p class="mb-2"><strong>${verdicts[verdict]}:</strong> ${text}</p>`;
-  const html = line(causeOk ? 'correct' : 'wrong', causeOk
-    ? 'צריבת שמש. הכתמים הופיעו זמן קצר אחרי מעבר לשמש ישירה, ורק בעלים שפונים לחלון.'
-    : 'הגורם הסביר הוא צריבת שמש. דנה משקה כרגיל, והכתמים הופיעו רק בעלים שפונים לשמש מיד אחרי המעבר.') +
-    line(checksVerdict, {
-      correct: 'בדקתם גם איפה מופיעים הכתמים וגם את מצב האדמה, וכך שללתם גורמים אחרים.',
-      partial: 'בחרתם חלק מהבדיקות הנכונות. כדאי לבדוק גם אם הכתמים רק בצד שפונה לשמש וגם את האדמה בעומק פרק אצבע. דשן ומחיר לא עוזרים לאבחן.',
-      wrong: 'הבדיקות שעוזרות כאן הן איפה מופיעים הכתמים ומצב האדמה בעומק פרק אצבע. הוספת דשן היא פעולה ולא בדיקה, והמחיר לא קשור.'
-    }[checksVerdict]);
-  return { html, score: (causeOk ? 1 : 0) + (checksVerdict === 'correct' ? 1 : checksVerdict === 'partial' ? 0.5 : 0) };
+  // checks: all right and nothing extra = 1, some right = 0.5, none = 0
+  const checks = hits === quiz.checks.length && chosen.length === hits ? 1 : hits ? 0.5 : 0;
+  return { score: (causeOk ? 1 : 0) + checks };
 }
 
 form.addEventListener('submit', (e) => {
@@ -442,10 +421,10 @@ form.addEventListener('submit', (e) => {
   reportProgress('habits');
   firstTry.habits ??= [ // only the first valid submission goes to the report (sent with the unit)
       { id: 'Q06_plant_name', type: 'fill-in', response: name, result: 'neutral' },
-      { id: 'Q07_plant_count', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
+      { id: 'Q07_number_of_plants', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
       ...['when', 'check', 'light', 'pot'].map((q, i) => ({
-        id: ['Q08_watering_timing', 'Q09_soil_check_habit', 'Q10_light_location', 'Q11_pot_drainage'][i],
-        type: 'choice', response: toLetters(q), result: 'neutral'
+        id: ['Q08_when_do_you_water', 'Q09_do_you_check_the_soil', 'Q10_where_is_the_plant', 'Q11_pot_drainage'][i],
+        type: 'choice', response: answerText(q), result: 'neutral'
       }))
   ];
   updateSubmitState();
@@ -462,23 +441,18 @@ closingForm.addEventListener('submit', (e) => {
   closingForm.querySelectorAll('input, button[type="submit"]').forEach((el) => { el.disabled = true; });
   const result = gradeQuiz();
   const causeOk = picked('cause')[0] === quiz.cause;
+  const rightOf = (i) => (i.name === 'cause' ? i.value === quiz.cause : quiz.checks.includes(i.value));
   firstTry.closing = { score: result.score, causeOk, checksScore: result.score - causeOk, // total = cause (0/1) + checks (0/0.5/1)
-    cause: toLetters('cause'), checks: toLetters('checks') };
-  $('closingFeedback').innerHTML = '<p class="small fw-bold m-0">התשובות נשמרו בלומדה.</p>';
-  $('closingShow').hidden = false;
+    cause: answerText('cause'), checks: answerText('checks'),
+    causePattern: answerText('cause', rightOf), checksPattern: answerText('checks', rightOf) };
+  // Answer shows at once: right options and wrong picks are marked on the form itself, plus a short why
+  closingForm.querySelectorAll('[name="cause"], [name="checks"]').forEach((input) => {
+    input.closest('.form-check').classList.toggle('is-answer', rightOf(input));
+    input.closest('.form-check').classList.toggle('is-miss', !rightOf(input) && input.checked);
+  });
+  showNote($('closingFeedback'), 'מחסור במים: השקיה לא סדירה ליד מקור חום מייבשת את האדמה מהר. כדי לא לבלבל עם השקיית יתר, בודקים את האדמה בעומק פרק אצבע ואת משקל העציץ.');
   progress.quizScore = result.score;
   reportProgress('closing');
-});
-
-// Show answer: mark right options (and wrong picks) on the form itself, plus a short why
-$('closingShow').addEventListener('click', () => {
-  closingForm.querySelectorAll('[name="cause"], [name="checks"]').forEach((input) => {
-    const right = input.name === 'cause' ? input.value === quiz.cause : quiz.checks.includes(input.value);
-    input.closest('.form-check').classList.toggle('is-answer', right);
-    input.closest('.form-check').classList.toggle('is-miss', !right && input.checked);
-  });
-  showNote($('closingFeedback'), 'צריבת שמש: הכתמים הופיעו מיד אחרי המעבר לשמש ורק בעלים שפונים לחלון. כדי לשלול גורמים אחרים בודקים איפה הכתמים ומה מצב האדמה.');
-  $('closingShow').hidden = true;
 });
 
 /* ===== Unit submit: enabled after one attempt in every part; sends everything once ===== */
@@ -512,11 +486,11 @@ $('submitUnit').addEventListener('click', () => {
   // Three graded parts, a third each (SCORM_SPEC.md part 5)
   const score = Math.round(((m1.ok + m2.ok) / 2 + sort.correct / 6 + closing.score / 2) / 3 * 100);
   const sent = sendInteractions([
-    { id: 'Q01_mystery_check', type: 'choice', response: m1.response, pattern: 'a', result: resultOf(+m1.ok) },
-    { id: 'Q02_mystery_cause', type: 'choice', response: m2.response, pattern: 'a', result: resultOf(+m2.ok) },
-    { id: 'Q03_sorting_cases', type: 'matching', response: sort.response, pattern: '1.a,2.b,3.c,4.b,5.a,6.c', result: resultOf(sort.correct / 6) },
-    { id: 'Q04_closing_cause', type: 'choice', response: closing.cause, pattern: 'b', result: resultOf(+closing.causeOk) },
-    { id: 'Q05_closing_checks', type: 'choice', response: closing.checks, pattern: 'a,c', result: resultOf(closing.checksScore) },
+    { id: 'Q01_mystery_what_to_check_first', type: 'choice', response: m1.response, pattern: m1.pattern, result: resultOf(+m1.ok) },
+    { id: 'Q02_mystery_likely_cause', type: 'choice', response: m2.response, pattern: m2.pattern, result: resultOf(+m2.ok) },
+    { id: 'Q03_sorting_six_cases', type: 'matching', response: sort.response, pattern: sort.pattern, result: resultOf(sort.correct / 6) },
+    { id: 'Q04_closing_likely_cause', type: 'choice', response: closing.cause, pattern: closing.causePattern, result: resultOf(+closing.causeOk) },
+    { id: 'Q05_closing_what_to_check', type: 'choice', response: closing.checks, pattern: closing.checksPattern, result: resultOf(closing.checksScore) },
     ...firstTry.habits
   ]);
   const saved = sendScore(score) && sent;
