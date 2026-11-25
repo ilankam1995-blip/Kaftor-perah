@@ -69,7 +69,10 @@ const PASS_MARK = 60;
 // First attempt per game: retries keep teaching, but only the first attempt is reported
 const firstTry = { mystery: [], sorting: null, closing: null, habits: null };
 
-// Append interactions after the existing ones (never from 0), then save once
+// Append interactions after the existing ones (never from 0), then save once.
+// Answers are sent as readable Hebrew text, so every text answer uses type 'fill-in': in SCORM 1.2 only
+// fill-in (and performance) allow free text in student_response and pattern (CMIString255).
+// 'choice' allows only single letters/digits and 'matching' only pairs like 1.a (SCORM_SPEC.md part 4).
 function sendInteractions(list) {
   if (!lms.canSave) return false;
   const time = new Date().toTimeString().slice(0, 8); // HH:MM:SS
@@ -420,11 +423,11 @@ form.addEventListener('submit', (e) => {
     '<p class="small mt-3 mb-0">הטיפים כלליים ולא מאבחנים צמח מסוים. אם הצמח נראה חולה, פנו לצוות המשתלה.</p>');
   reportProgress('habits');
   firstTry.habits ??= [ // only the first valid submission goes to the report (sent with the unit)
-      { id: 'Q06_plant_name', type: 'fill-in', response: name, result: 'neutral' },
-      { id: 'Q07_number_of_plants', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
+      { id: 'Q06_habits_plant_name', type: 'fill-in', response: name, result: 'neutral' },
+      { id: 'Q07_habits_number_of_plants', type: 'numeric', response: $('plantCount').value.trim(), result: 'neutral' },
       ...['when', 'check', 'light', 'pot'].map((q, i) => ({
-        id: ['Q08_when_do_you_water', 'Q09_do_you_check_the_soil', 'Q10_where_is_the_plant', 'Q11_pot_drainage'][i],
-        type: 'choice', response: answerText(q), result: 'neutral'
+        id: ['Q08_habits_when_to_water', 'Q09_habits_soil_check', 'Q10_habits_plant_location', 'Q11_habits_pot_drainage'][i],
+        type: 'fill-in', response: answerText(q), result: 'neutral'
       }))
   ];
   updateSubmitState();
@@ -486,11 +489,11 @@ $('submitUnit').addEventListener('click', () => {
   // Three graded parts, a third each (SCORM_SPEC.md part 5)
   const score = Math.round(((m1.ok + m2.ok) / 2 + sort.correct / 6 + closing.score / 2) / 3 * 100);
   const sent = sendInteractions([
-    { id: 'Q01_mystery_what_to_check_first', type: 'choice', response: m1.response, pattern: m1.pattern, result: resultOf(+m1.ok) },
-    { id: 'Q02_mystery_likely_cause', type: 'choice', response: m2.response, pattern: m2.pattern, result: resultOf(+m2.ok) },
-    { id: 'Q03_sorting_six_cases', type: 'matching', response: sort.response, pattern: sort.pattern, result: resultOf(sort.correct / 6) },
-    { id: 'Q04_closing_likely_cause', type: 'choice', response: closing.cause, pattern: closing.causePattern, result: resultOf(+closing.causeOk) },
-    { id: 'Q05_closing_what_to_check', type: 'choice', response: closing.checks, pattern: closing.checksPattern, result: resultOf(closing.checksScore) },
+    { id: 'Q01_mystery_what_to_check_first', type: 'fill-in', response: m1.response, pattern: m1.pattern, result: resultOf(+m1.ok) },
+    { id: 'Q02_mystery_likely_cause', type: 'fill-in', response: m2.response, pattern: m2.pattern, result: resultOf(+m2.ok) },
+    { id: 'Q03_sorting_cases_to_causes', type: 'fill-in', response: sort.response, pattern: sort.pattern, result: resultOf(sort.correct / 6) },
+    { id: 'Q04_closing_likely_cause', type: 'fill-in', response: closing.cause, pattern: closing.causePattern, result: resultOf(+closing.causeOk) },
+    { id: 'Q05_closing_what_to_check', type: 'fill-in', response: closing.checks, pattern: closing.checksPattern, result: resultOf(closing.checksScore) },
     ...firstTry.habits
   ]);
   const saved = sendScore(score) && sent;
