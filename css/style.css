@@ -59,6 +59,9 @@ p { line-height: 1.7; }
 /* Brand buttons built on Bootstrap's button variables */
 .btn-brand { --bs-btn-bg: var(--c-red); --bs-btn-color: #FFF; --bs-btn-hover-bg: var(--c-red-dark); --bs-btn-hover-color: #FFF; --bs-btn-active-bg: var(--c-red-dark); --bs-btn-active-color: #FFF; font-weight: 700; min-height: 48px; }
 .btn-ghost { --bs-btn-color: var(--c-dark); --bs-btn-border-color: var(--c-dark); --bs-btn-hover-bg: var(--c-dark); --bs-btn-hover-color: #FFF; --bs-btn-active-bg: var(--c-dark); --bs-btn-active-color: #FFF; border-width: 2px; font-weight: 700; min-height: 44px; }
+/* Touch targets at least 44px (WCAG 2.5.5, course requirement) */
+.navbar-toggler { min-width: 44px; min-height: 44px; }
+.form-select { min-height: 44px; }
 
 /* ===== Header & footer ===== */
 .site-header { background: var(--c-panel); border-bottom: 1px solid var(--c-border); }
